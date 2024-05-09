@@ -47,6 +47,8 @@ namespace Hades2RemoveVersionNumber
             Console.WriteLine($"[INFO] Overwriting exe file with patched version ...");
             File.WriteAllBytes(hades2ExecutablePath.ToString(), hades2Bytes);
             Console.WriteLine($"[INFO] Complete! Warning: please do NOT file bug reports to Supergiant with this patched version!");
+            Console.WriteLine($"Press any key to exit...");
+            Console.ReadKey();
 
         }
 
