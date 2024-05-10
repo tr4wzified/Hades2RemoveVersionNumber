@@ -38,11 +38,11 @@ namespace Hades2RemoveVersionNumber
 
             // Patching
             Console.WriteLine($"[INFO] Locating 'v0.' version prefix in executable...");
-            var versionPrefixLocation = IndexOfSequence(hades2Bytes, [0x5C, 0x49, 0x6E, 0x47, 0x61, 0x6D, 0x65, 0x55, 0x49, 0x2E, 0x63, 0x70, 0x70, 0x00, 0x00, 0x00], 0).First();
+            var versionPrefixLocation = IndexOfSequence(hades2Bytes, [0x00, 0x76, 0x30, 0x2E], 0).First();
             Console.WriteLine($"[INFO] Locating version in executable...");
             var versionLocation = IndexOfSequence(hades2Bytes, [0xA0, 0x59, 0x01, 0x40, 0x01, 0x00, 0x00, 0x00, 0xA0, 0x59, 0x01, 0x40, 0x01, 0x00, 0x00, 0x00], 0).First();
             Console.WriteLine($"[INFO] Replacing hex values ...");
-            hades2Bytes[versionPrefixLocation + 16] = 0x00;
+            hades2Bytes[versionPrefixLocation + 1] = 0x00;
             hades2Bytes[versionLocation + 16] = 0x00;
             Console.WriteLine($"[INFO] Overwriting exe file with patched version ...");
             File.WriteAllBytes(hades2ExecutablePath.ToString(), hades2Bytes);
