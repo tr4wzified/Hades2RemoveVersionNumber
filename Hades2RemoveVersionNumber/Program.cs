@@ -9,6 +9,7 @@ namespace Hades2RemoveVersionNumber
     {
         public static void Main(string[] args)
         {
+            string hades2ExecutablePath = string.Empty;
             var handler = new SteamHandler(FileSystem.Shared, OperatingSystem.IsWindows() ? WindowsRegistry.Shared : null);
             var game = handler.FindOneGameById(AppId.From(1145350), out var errors);
             Console.WriteLine("[INFO] Attempting to find Hades II file path...");
@@ -18,23 +19,34 @@ namespace Hades2RemoveVersionNumber
                 {
                     Console.WriteLine($"[WARN] {error}");
                 }
-                //Console.WriteLine("[ERROR] Failed patching Hades II, see above error(s)!");
             }
             if (game == null || game?.Path == default)
             {
                 Console.WriteLine("[ERROR] Failed to find Hades II Steam game directory!");
+                while (true) {
+                    Console.WriteLine(@"> Please input your game path manually and press enter. Example: C:\Program Files (x86)\Steam\steamapps\common\Hades II");
+                    string? input = Console.ReadLine();
+                    var exists = !string.IsNullOrEmpty(input) && Directory.Exists(input);
+                    var directories = Directory.GetDirectories(input);
+                    var containsShipDirectory = directories.Any(x => x.EndsWith("Ship"));
+                    if (exists && containsShipDirectory)
+                    {
+                        hades2ExecutablePath = Path.Combine(input, "Ship", "Hades2.exe");
+                        break;
+                    }
+                    Console.WriteLine("> Did not recognize that as a valid Hades II game path. Please try again.");
+                }
                 return;
             }
-
             Console.WriteLine("[INFO] Found Hades II!");
             var hades2Path = game.Path;
             Console.WriteLine($"[INFO] Located at {game.Path}");
-            var hades2ExecutablePath = hades2Path.Combine("Ship").Combine("Hades2.exe");
+            hades2ExecutablePath = hades2Path.Combine("Ship").Combine("Hades2.exe").ToString();
 
             Console.WriteLine($"[INFO] Reading game exe file into bytes...");
-            var hades2Bytes = File.ReadAllBytes(hades2ExecutablePath.ToString());
+            var hades2Bytes = File.ReadAllBytes(hades2ExecutablePath);
             Console.WriteLine("[INFO] Backing up game exe file to Hades2.exe.bak...");
-            File.WriteAllBytes(hades2Path.Combine("Ship").Combine("Hades2.exe.bak").ToString(), hades2Bytes);
+            File.WriteAllBytes(Path.Combine(Directory.GetParent(hades2ExecutablePath).FullName, "Hades2.exe.bak"), hades2Bytes);
 
             // Patching
             Console.WriteLine($"[INFO] Locating 'v0.' version prefix in executable...");
