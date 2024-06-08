@@ -2,6 +2,7 @@
 using GameFinder.StoreHandlers.Steam;
 using GameFinder.StoreHandlers.Steam.Models.ValueTypes;
 using NexusMods.Paths;
+using System.Text;
 
 namespace Hades2RemoveVersionNumber
 {
@@ -49,13 +50,23 @@ namespace Hades2RemoveVersionNumber
             File.WriteAllBytes(Path.Combine(Directory.GetParent(hades2ExecutablePath).FullName, "Hades2.exe.bak"), hades2Bytes);
 
             // Patching
+            Console.WriteLine("[INFO] Detecting Hades II version...");
+            var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(hades2ExecutablePath);
+            Console.WriteLine($"[INFO] Detected version {version.FileVersion}");
+            if (version.FileVersion == null) {
+                Console.WriteLine("[ERROR] Could not detect Hades II version!");
+                Console.WriteLine($"Press any key to exit...");
+                Console.ReadKey();
+                Environment.Exit(0);
+            }
+            var versionBytes = Encoding.Default.GetBytes(version.FileVersion);
             Console.WriteLine($"[INFO] Locating 'v0.' version prefix in executable...");
             var versionPrefixLocation = IndexOfSequence(hades2Bytes, [0x00, 0x76, 0x30, 0x2E], 0).First();
             Console.WriteLine($"[INFO] Locating version in executable...");
-            var versionLocation = IndexOfSequence(hades2Bytes, [0xA0, 0x59, 0x01, 0x40, 0x01, 0x00, 0x00, 0x00, 0xA0, 0x59, 0x01, 0x40, 0x01, 0x00, 0x00, 0x00], 0).First();
-            Console.WriteLine($"[INFO] Replacing hex values ...");
+            var versionLocation = IndexOfSequence(hades2Bytes, versionBytes, 0).First();
+            Console.WriteLine($"[INFO] Replacing hex values...");
             hades2Bytes[versionPrefixLocation + 1] = 0x00;
-            hades2Bytes[versionLocation + 16] = 0x00;
+            hades2Bytes[versionLocation] = 0x00;
             Console.WriteLine($"[INFO] Overwriting exe file with patched version ...");
             File.WriteAllBytes(hades2ExecutablePath.ToString(), hades2Bytes);
             Console.WriteLine($"[INFO] Complete! Warning: please do NOT file bug reports to Supergiant with this patched version!");
